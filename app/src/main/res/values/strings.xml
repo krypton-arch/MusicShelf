@@ -1,0 +1,64 @@
+<resources>
+    <string name="app_name">MusicShelf</string>
+
+    <!-- Home Screen -->
+    <string name="empty_playlists_title">No playlists yet</string>
+    <string name="empty_playlists_subtitle">Tap the + button to create your first playlist</string>
+    <string name="track_count">%d tracks</string>
+
+    <!-- Create Playlist Screen -->
+    <string name="create_playlist_title">Create Playlist</string>
+    <string name="playlist_name_label">Name</string>
+    <string name="playlist_name_placeholder">My awesome playlist</string>
+    <string name="playlist_description_label">Description</string>
+    <string name="playlist_description_placeholder">What\'s this playlist about?</string>
+    <string name="mood_tag_label">Mood</string>
+    <string name="create_playlist_button">Create Playlist</string>
+
+    <!-- Playlist Detail Screen -->
+    <string name="empty_tracks_title">No tracks yet</string>
+    <string name="empty_tracks_subtitle">Tap the + button to add your first track</string>
+    <string name="track_deleted_message">Track deleted</string>
+    <string name="undo_action">Undo</string>
+    <string name="delete_action">Delete</string>
+
+    <!-- Add Track Screen -->
+    <string name="add_track_title">Add Track</string>
+    <string name="track_title_label">Title</string>
+    <string name="track_title_placeholder">Song title</string>
+    <string name="track_artist_label">Artist</string>
+    <string name="track_artist_placeholder">Artist name</string>
+    <string name="track_album_label">Album</string>
+    <string name="track_album_placeholder">Album name (optional)</string>
+    <string name="track_duration_label">Duration</string>
+    <string name="minutes_label">Min</string>
+    <string name="seconds_label">Sec</string>
+    <string name="add_track_button">Add Track</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_theme_title">Theme</string>
+    <string name="theme_system">System Default</string>
+    <string name="theme_dark">Dark Mode</string>
+    <string name="theme_light">Light Mode</string>
+    <string name="settings_default_sort_title">Default Sort Order</string>
+    <string name="sort_position">Custom Order (Position)</string>
+    <string name="sort_bpm">BPM (Fastest first)</string>
+    <string name="sort_duration">Duration (Longest first)</string>
+    <string name="sort_date_added">Date Added (Newest first)</string>
+    <string name="settings_default_mood_title">Default Mood Filter</string>
+    <string name="mood_all">All Moods</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_create_playlist">Create new playlist</string>
+    <string name="cd_navigate_back">Navigate back</string>
+    <string name="cd_playlist_cover">Cover art for %s playlist</string>
+    <string name="cd_add_track">Add new track</string>
+    <string name="cd_delete_playlist">Delete playlist</string>
+    <string name="cd_drag_handle">Drag to reorder</string>
+    <string name="cd_settings">Settings</string>
+    <string name="cd_sort_options">Sort options</string>
+
+    <!-- Errors -->
+    <string name="unknown_error">An unknown error occurred</string>
+</resources>

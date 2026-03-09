@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option java_package = "com.example.musicshelf.data.local.datastore";
+option java_multiple_files = true;
+
+message UserPrefs {
+  ThemePreference theme_preference = 1;
+  string default_mood_filter = 2;
+  SortOrder default_sort_order = 3;
+  bool onboarding_seen = 4;
+}
+
+enum ThemePreference {
+  THEME_PREFERENCE_UNSPECIFIED = 0;
+  THEME_PREFERENCE_LIGHT = 1;
+  THEME_PREFERENCE_DARK = 2;
+  THEME_PREFERENCE_SYSTEM = 3;
+}
+
+enum SortOrder {
+  SORT_ORDER_POSITION = 0;
+  SORT_ORDER_BPM = 1;
+  SORT_ORDER_DURATION = 2;
+  SORT_ORDER_DATE_ADDED = 3;
+}
