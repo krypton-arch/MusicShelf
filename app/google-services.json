@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1035550371408",
+    "project_id": "musicshelf-a34f7",
+    "storage_bucket": "musicshelf-a34f7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1035550371408:android:ba66b364f82798a71feb55",
+        "android_client_info": {
+          "package_name": "com.example.musicshelf"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQJiR_8u2hih0PybkYSeR92e7YfyTyzA4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

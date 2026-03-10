@@ -7,6 +7,7 @@ import com.example.musicshelf.data.local.datastore.SortOrder
 import com.example.musicshelf.data.local.entity.PlaylistEntity
 import com.example.musicshelf.data.local.entity.TrackEntity
 import com.example.musicshelf.domain.repository.PlaylistRepository
+import com.example.musicshelf.domain.repository.SpotifyRepository
 import com.example.musicshelf.domain.repository.TrackRepository
 import com.example.musicshelf.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,9 +23,11 @@ import javax.inject.Inject
 
 data class PlaylistDetailUiState(
     val playlist: PlaylistEntity? = null,
-    val isLoading: Boolean = true,
+    val tracks: List<TrackEntity> = emptyList(),
+    val isLoading: Boolean = false,
     val error: String? = null,
-    val recentlyDeletedTrack: TrackEntity? = null
+    val recentlyDeletedTrack: TrackEntity? = null,
+    val pushSuccess: Boolean = false
 )
 
 @HiltViewModel
@@ -32,7 +35,8 @@ class PlaylistDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val playlistRepository: PlaylistRepository,
     private val trackRepository: TrackRepository,
-    private val userPrefsRepository: UserPreferencesRepository
+    private val userPrefsRepository: UserPreferencesRepository,
+    private val spotifyRepository: SpotifyRepository
 ) : ViewModel() {
 
     private val playlistId: String = savedStateHandle.get<String>("playlistId") ?: ""
@@ -123,5 +127,68 @@ class PlaylistDetailViewModel @Inject constructor(
 
     fun setSortOrder(sortOrder: SortOrder) {
         _activeSortOrder.value = sortOrder
+    }
+
+    fun toggleCollaborative(isCollaborative: Boolean) {
+        viewModelScope.launch {
+            _uiState.value.playlist?.let { playlist ->
+                val updatedPlaylist = playlist.copy(
+                    isCollaborative = isCollaborative,
+                    updatedAt = System.currentTimeMillis()
+                )
+                playlistRepository.updatePlaylist(updatedPlaylist)
+                _uiState.update { it.copy(playlist = updatedPlaylist) }
+            }
+        }
+    }
+
+    fun pushToSpotify() {
+        val playlist = _uiState.value.playlist ?: return
+        val tracks = _uiState.value.tracks
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            
+            // 1. Create remote playlist
+            spotifyRepository.createSpotifyPlaylist(
+                name = playlist.name,
+                description = playlist.description,
+                moodTag = playlist.moodTag
+            ).onSuccess { remotePlaylist ->
+                // 2. Add tracks
+                val trackUris = tracks.mapNotNull { it.spotifyUri }
+                if (trackUris.isNotEmpty()) {
+                    spotifyRepository.addTracksToSpotifyPlaylist(remotePlaylist.spotifyId!!, trackUris)
+                        .onSuccess {
+                            // 3. Update local playlist with spotifyId
+                            val updatedPlaylist = playlist.copy(spotifyId = remotePlaylist.spotifyId)
+                            playlistRepository.updatePlaylist(updatedPlaylist)
+                            _uiState.update { it.copy(
+                                playlist = updatedPlaylist,
+                                isLoading = false,
+                                pushSuccess = true
+                            ) }
+                        }
+                        .onFailure { error ->
+                            _uiState.update { it.copy(isLoading = false, error = error.message) }
+                        }
+                } else {
+                    // Update local even if no tracks
+                    val updatedPlaylist = playlist.copy(spotifyId = remotePlaylist.spotifyId)
+                    playlistRepository.updatePlaylist(updatedPlaylist)
+                    _uiState.update { it.copy(
+                        playlist = updatedPlaylist,
+                        isLoading = false,
+                        pushSuccess = true
+                    ) }
+                }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, error = error.message) }
+            }
+        }
+    }
+
+    fun clearPushSuccess() {
+        _uiState.update { it.copy(pushSuccess = false) }
     }
 }

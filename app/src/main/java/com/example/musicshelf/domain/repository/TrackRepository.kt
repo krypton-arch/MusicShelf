@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface TrackRepository {
     fun getTracksForPlaylist(playlistId: String): Flow<List<TrackEntity>>
+    suspend fun getTracksForPlaylistSync(playlistId: String): List<TrackEntity>
     fun getTrackCountForPlaylist(playlistId: String): Flow<Int>
     suspend fun addTrack(track: TrackEntity)
     suspend fun addTracks(tracks: List<TrackEntity>)

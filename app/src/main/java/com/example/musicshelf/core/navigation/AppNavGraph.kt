@@ -15,11 +15,28 @@ import com.example.musicshelf.ui.create.CreatePlaylistScreen
 import com.example.musicshelf.ui.detail.PlaylistDetailScreen
 import com.example.musicshelf.ui.home.HomeScreen
 import com.example.musicshelf.ui.settings.SettingsScreen
+import com.example.musicshelf.ui.importspotify.SpotifyImportScreen
+import com.example.musicshelf.ui.auth.AuthViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 
 private const val NAV_ANIM_DURATION = 300
 
 @Composable
-fun AppNavGraph(navController: NavHostController) {
+fun AppNavGraph(
+    navController: NavHostController,
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
+    val authUser by authViewModel.currentUser.collectAsStateWithLifecycle()
+
+    LaunchedEffect(authUser) {
+        if (authUser == null) {
+            authViewModel.signInAnonymously()
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Routes.Home.route,
@@ -89,7 +106,15 @@ fun AppNavGraph(navController: NavHostController) {
 
         composable(Routes.Settings.route) {
             SettingsScreen(
-                onNavigateBack = { navController.navigateUp() }
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToImport = { navController.navigate(Routes.SpotifyImport.route) }
+            )
+        }
+
+        composable(Routes.SpotifyImport.route) {
+            SpotifyImportScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onImportFinished = { navController.navigateUp() }
             )
         }
     }

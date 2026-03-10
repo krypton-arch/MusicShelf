@@ -10,4 +10,5 @@ sealed class Routes(val route: String) {
         fun createRoute(playlistId: String) = "add_track/$playlistId"
     }
     data object Settings : Routes("settings")
+    data object SpotifyImport : Routes("spotify_import")
 }

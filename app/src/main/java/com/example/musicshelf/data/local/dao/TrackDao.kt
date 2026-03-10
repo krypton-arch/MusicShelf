@@ -14,6 +14,9 @@ interface TrackDao {
     @Query("SELECT * FROM tracks WHERE playlistId = :playlistId ORDER BY position ASC")
     fun getTracksForPlaylist(playlistId: String): Flow<List<TrackEntity>>
 
+    @Query("SELECT * FROM tracks WHERE playlistId = :playlistId ORDER BY position ASC")
+    suspend fun getTracksForPlaylistSync(playlistId: String): List<TrackEntity>
+
     @Query("SELECT COUNT(*) FROM tracks WHERE playlistId = :playlistId")
     fun getTrackCountForPlaylist(playlistId: String): Flow<Int>
 

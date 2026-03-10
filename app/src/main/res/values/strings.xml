@@ -37,6 +37,25 @@
 
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
+    <string name="settings_auth_title">Account</string>
+    <string name="btn_sign_in_google">Sign In with Google</string>
+    <string name="btn_connect_spotify">Connect to Spotify</string>
+    <string name="btn_disconnect_spotify">Disconnect Spotify</string>
+    <string name="btn_import_spotify">Import from Spotify</string>
+    <string name="spotify_import_title">Import Playlists</string>
+    <string name="import_button">Import (%d)</string>
+    <string name="check_all">Check All</string>
+    <string name="uncheck_all">Uncheck All</string>
+    <string name="import_success">%d playlists imported</string>
+    <string name="push_to_spotify">Push to Spotify</string>
+    <string name="push_success">Playlist pushed to Spotify</string>
+    <string name="default_web_client_id">YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com</string>
+    <string name="btn_sign_out">Sign Out</string>
+    <string name="signed_in_as">Signed in as %s</string>
+    <string name="collaborative_toggle">Collaborative</string>
+    <string name="collaborative_status_on">Collaborative Mode On</string>
+    <string name="collaborative_status_off">Local Only</string>
+    <string name="anonymous_user">Anonymous User</string>
     <string name="settings_theme_title">Theme</string>
     <string name="theme_system">System Default</string>
     <string name="theme_dark">Dark Mode</string>

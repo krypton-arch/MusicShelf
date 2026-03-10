@@ -15,6 +15,9 @@ class TrackRepositoryImpl @Inject constructor(
     override fun getTracksForPlaylist(playlistId: String): Flow<List<TrackEntity>> =
         trackDao.getTracksForPlaylist(playlistId)
 
+    override suspend fun getTracksForPlaylistSync(playlistId: String): List<TrackEntity> =
+        trackDao.getTracksForPlaylistSync(playlistId)
+
     override fun getTrackCountForPlaylist(playlistId: String): Flow<Int> =
         trackDao.getTrackCountForPlaylist(playlistId)
 

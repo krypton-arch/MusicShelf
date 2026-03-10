@@ -11,6 +11,7 @@ MusicShelf is a modern, premium Android application for managing and curating pe
 - **Swipe-to-Delete with Undo**: Easily remove tracks with a swipe gesture and temporarily restore them via Snackbar.
 - **Premium Dark UI**: A pure dark theme featuring custom Canvas-drawn empty state illustrations (vinyl records, track lists) and dynamic edge-to-edge screens.
 - **Persistent Preferences**: Saves your default theme, mood filters, and sort orders safely via Proto DataStore.
+- **Spotify Integration**: Connect your Spotify account to import your favorite playlists directly into MusicShelf.
 
 ## 🛠 Tech Stack
 

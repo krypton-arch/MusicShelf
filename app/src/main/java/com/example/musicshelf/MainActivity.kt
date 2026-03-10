@@ -1,5 +1,6 @@
 package com.example.musicshelf
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,13 +11,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.example.musicshelf.core.navigation.AppNavGraph
 import com.example.musicshelf.data.local.datastore.ThemePreference
+import com.example.musicshelf.data.remote.auth.SpotifyAuthManager
 import com.example.musicshelf.domain.repository.UserPreferencesRepository
 import com.example.musicshelf.ui.theme.MusicShelfTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -25,8 +28,15 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userPreferencesRepository: UserPreferencesRepository
 
+    @Inject
+    lateinit var spotifyAuthManager: SpotifyAuthManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Handle intent if the app was killed and recreated from the deep link
+        handleSpotifyIntent(intent)
+        
         enableEdgeToEdge()
         setContent {
             val userPrefs by userPreferencesRepository.userPreferencesFlow.collectAsStateWithLifecycle(
@@ -44,6 +54,23 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     AppNavGraph(navController = navController)
                 }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleSpotifyIntent(intent)
+    }
+
+    private fun handleSpotifyIntent(intent: Intent?) {
+        if (intent == null) return
+        
+        val code = spotifyAuthManager.handleAuthCallback(intent)
+        if (code != null) {
+            lifecycleScope.launch {
+                spotifyAuthManager.exchangeCodeForToken(code)
             }
         }
     }

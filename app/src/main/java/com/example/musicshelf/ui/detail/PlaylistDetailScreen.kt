@@ -21,7 +21,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.outlined.DateRange
@@ -41,6 +43,8 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -101,6 +105,17 @@ fun PlaylistDetailScreen(
         }
     }
 
+    // Push success snackbar
+    LaunchedEffect(uiState.pushSuccess) {
+        if (uiState.pushSuccess) {
+            snackbarHostState.showSnackbar(
+                message = "Playlist pushed to Spotify!",
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearPushSuccess()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -121,6 +136,7 @@ fun PlaylistDetailScreen(
                     }
                 },
                 actions = {
+                    // Sort Menu
                     Box {
                         IconButton(onClick = { showSortMenu = true }) {
                             Icon(
@@ -169,6 +185,9 @@ fun PlaylistDetailScreen(
                             )
                         }
                     }
+
+                    // Overflow Menu
+                    // Delete Button
                     IconButton(
                         onClick = {
                             viewModel.deletePlaylist()
@@ -180,6 +199,41 @@ fun PlaylistDetailScreen(
                             contentDescription = stringResource(R.string.cd_delete_playlist),
                             tint = MaterialTheme.colorScheme.error
                         )
+                    }
+
+                    // Overflow Menu
+                    var showOverflowMenu by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(onClick = { showOverflowMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "More options",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showOverflowMenu,
+                            onDismissRequest = { showOverflowMenu = false },
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ) {
+                            if (uiState.playlist?.spotifyId == null) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.push_to_spotify)) },
+                                    onClick = {
+                                        viewModel.pushToSpotify()
+                                        showOverflowMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.CloudUpload,
+                                            contentDescription = null,
+                                            tint = MusicPrimary
+                                        )
+                                    }
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -249,7 +303,9 @@ fun PlaylistDetailScreen(
                             description = playlist.description,
                             coverUri = playlist.coverUri,
                             moodTag = playlist.moodTag,
-                            trackCount = tracks.size
+                            trackCount = tracks.size,
+                            isCollaborative = playlist.isCollaborative,
+                            onCollaborativeToggle = { viewModel.toggleCollaborative(it) }
                         )
                     }
 
@@ -298,7 +354,9 @@ private fun PlaylistHeader(
     description: String,
     coverUri: String?,
     moodTag: String,
-    trackCount: Int
+    trackCount: Int,
+    isCollaborative: Boolean,
+    onCollaborativeToggle: (Boolean) -> Unit
 ) {
     val moodColor = getMoodColor(moodTag)
 
@@ -370,6 +428,41 @@ private fun PlaylistHeader(
                 color = MusicTextSecondary,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Collaborative toggle
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.collaborative_toggle),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = stringResource(
+                        if (isCollaborative) R.string.collaborative_status_on 
+                        else R.string.collaborative_status_off
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isCollaborative) MusicPrimary else MusicTextSecondary
+                )
+            }
+            Switch(
+                checked = isCollaborative,
+                onCheckedChange = onCollaborativeToggle,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MusicPrimary,
+                    checkedTrackColor = MusicPrimary.copy(alpha = 0.5f),
+                    uncheckedThumbColor = MusicTextSecondary,
+                    uncheckedTrackColor = MusicSurfaceVariant
+                )
             )
         }
 

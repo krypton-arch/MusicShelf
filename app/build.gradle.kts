@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,11 +8,20 @@ plugins {
     alias(libs.plugins.hilt)
     id("kotlin-parcelize")
     alias(libs.plugins.protobuf)
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.musicshelf"
     compileSdk = 35
+
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(localPropertiesFile.inputStream())
+    }
+    val spotifyClientId = localProperties.getProperty("SPOTIFY_CLIENT_ID") ?: ""
+    val spotifyRedirectUri = localProperties.getProperty("SPOTIFY_REDIRECT_URI") ?: ""
 
     defaultConfig {
         applicationId = "com.example.musicshelf"
@@ -20,6 +31,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        buildConfigField("String", "SPOTIFY_CLIENT_ID", "\"$spotifyClientId\"")
+        buildConfigField("String", "SPOTIFY_REDIRECT_URI", "\"$spotifyRedirectUri\"")
+        manifestPlaceholders["spotifyRedirectScheme"] = "musicshelf"
+        manifestPlaceholders["spotifyRedirectHost"] = "callback"
     }
 
     buildTypes {
@@ -107,6 +123,13 @@ dependencies {
     // Gson
     implementation(libs.gson)
 
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+
+    // Browser (Chrome Custom Tabs)
+    implementation(libs.androidx.browser)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -115,6 +138,20 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore) {
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
+    }
+    implementation(libs.play.services.auth)
+    
+    // Credential Manager for Google Sign In
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 }
 
 // Ensure KSP (Hilt) runs after Protobuf code generation and sees generated sources

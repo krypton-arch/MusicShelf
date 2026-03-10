@@ -11,6 +11,10 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.example.musicshelf.domain.repository.SpotifyRepository
+import com.example.musicshelf.data.repository.SpotifyRepositoryImpl
+import com.example.musicshelf.domain.repository.AuthRepository
+import com.example.musicshelf.data.repository.FirebaseAuthRepositoryImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -31,4 +35,16 @@ abstract class RepositoryModule {
     abstract fun bindUserPreferencesRepository(
         userPreferencesRepositoryImpl: UserPreferencesRepositoryImpl
     ): UserPreferencesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSpotifyRepository(
+        spotifyRepositoryImpl: SpotifyRepositoryImpl
+    ): SpotifyRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAuthRepository(
+        firebaseAuthRepositoryImpl: FirebaseAuthRepositoryImpl
+    ): AuthRepository
 }

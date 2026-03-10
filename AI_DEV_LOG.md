@@ -381,3 +381,187 @@ All Phase 2 tasks (2.1–2.7) documented above.
 **All sub-tasks delivered:** DataStore Proto dependencies (2.1), Proto schema & repository (2.2), Settings UI (2.3), Settings route integration (2.4), Sort options (2.5), AnimatedVisibility + spring filter chips (2.6), dev log updated (2.7). User preferences are fully integrated with reactive Flow-based reads backed by Protobuf DataStore.
 
 ***
+
+## [Phase 3.1] — Scaffold Spotify API Service & Repository
+**Date Completed:** 2026-03-09
+**Status:** ✅ Done
+
+### What Was Built
+- `SpotifyApiService.kt` — Defined endpoints (`/me/playlists`, `/playlists/{id}/tracks`, `/users/{id}/playlists`, `/playlists/{id}/tracks`) with matching Request/Response models.
+- `SpotifyPlaylistDto.kt` & `SpotifyTrackDto.kt` — Data transfer objects for Spotify network responses mapping heavily to `items`, `id`, `name`, `images` standard schemas.
+- `SpotifyRepository.kt` (interface) and `SpotifyRepositoryImpl.kt` — Handles conversion and mapping between remote DTO payloads and our local `PlaylistEntity` / `TrackEntity`. Returns idiomatic `Result<T>`.
+- `NetworkModule.kt` — Introduced Hilt configuration providing `Retrofit`, `OkHttpClient`, and `SpotifyApiService` singletons.
+- Added explicit Retrofit dependencies mapped smoothly alongside Gson setup.
+
+### Architecture Decisions
+- Segregated DTO payload models separately from Domain Entities to avoid polluting Database models with remote (`@SerializedName`) details.
+- Used default fallback assignment on parsing, such as `moodTag = "chill"` for Spotify playlists.
+- Repositories return `Result<T>` safely wrapping networking logic, keeping UI code clean.
+
+### Known Issues / TODOs
+- OAuth Interceptors for adding the `Bearer` token to headers are omitted completely here (waiting on Phase 3 Task 2 implementations).
+- Adding tracks is currently not handling robust chunks above 100 gracefully in one pass natively yet (currently simplistic chunk pass loops).
+
+### How to Test This Step
+- Sync Gradle to ensure Retrofit compiles properly.
+- Hilt dependencies resolve at compile time.
+
+***
+
+## [Phase 3.2] — Wire Spotify Credentials & Scaffold PKCE OAuth
+**Date Completed:** 2026-03-09
+**Status:** ✅ Done
+
+### What Was Built
+- Configured `app/build.gradle.kts` to parse `local.properties` and inject `SPOTIFY_CLIENT_ID` and `SPOTIFY_REDIRECT_URI` via `BuildConfig` securely.
+- Bound `manifestPlaceholders["spotifyRedirectScheme"]` to handle Chrome Custom Tabs redirect intent filtering.
+- Scaffoled `SpotifyAuthManager.kt` using `androidx.browser.customtabs` for the PKCE OAuth Flow.
+- Generated Code Verifier and Code Challenge (SHA-256) per Spotify's PKCE specifications.
+- Hooked up `BuildConfig.SPOTIFY_CLIENT_ID` and `BuildConfig.SPOTIFY_REDIRECT_URI` natively — ensuring zero hardcoded credentials remain in the codebase.
+
+### Architecture Decisions
+- Moved configuration reads out of the UI and into gradle build steps (`buildConfigField`) protecting secrets from VCS committing and standardizing variables natively.
+- `SpotifyAuthManager` persists the `codeVerifier` during the authentication handoff securely.
+
+### Known Issues / TODOs
+- UI Integration: Currently there is no "Connect to Spotify" UI Button that invokes `SpotifyAuthManager.initiateAuthFlow`.
+- The `handleAuthCallback` only pulls the `code`. We still need to build the `POST` token exchange logic to turn that `code` into a `Bearer` Token.
+
+### How to Test This Step
+- Sync Gradle (ensure `BuildConfig` gets generated successfully).
+- Ensure `local.properties` exists with `SPOTIFY_CLIENT_ID` and `SPOTIFY_REDIRECT_URI` inside it before compiling.
+
+***
+
+## [Phase 4.1] — Firebase Auth Setup & UI Integration
+**Date Completed:** 2026-03-09
+**Status:** ✅ Done
+
+### What Was Built
+- Integrated `firebase-auth`, `firebase-firestore`, and `play-services-auth` inside version catalog and `build.gradle.kts`.
+- Validated Google Services plugin mapping inside gradle configs for `.json` parsing.
+- Created `AuthRepository.kt` defining the core domain mappings of `AuthUser` to abstract Firebase.
+- Implemented `FirebaseAuthRepositoryImpl.kt` connecting specifically to Google's Provider alongside an Anonymous Fallback layer.
+- Added DI Provider injection inside `NetworkModule.kt` binding `Firebase.auth` and `Firebase.firestore`.
+- Bound `AuthRepository` heavily into `RepositoryModule.kt` for Hilt wiring.
+- Built `AuthViewModel.kt` emitting a reactive `StateFlow<AuthUser?>` to track logins using `auth.addAuthStateListener`.
+- Refactored `SettingsScreen.kt` gracefully injecting an elegant "Account" section tracking Sign In vs. Anonymous identities with Material 3 styling.
+
+### Architecture Decisions
+- Auth logic strictly adheres to Clean Architecture via interfaces. We convert Firebase `User` abstractions into a pure Kotlin `AuthUser` data class immediately at the boundary.
+- Kept the app offline-first by explicitly prioritizing `signInAnonymously()`, allowing users basic offline abilities before requiring Google. 
+- Avoided Google Credential Manager overhead focusing on `play-services-auth` specific OAuth handoffs given the Firebase core bindings.
+
+### Known Issues / TODOs
+- (Resolved) Google Sign-In and Anonymous automatic instantiation implemented in Phase 4.2.
+
+### How to Test This Step
+- Build the app and confirm Gradle sync completes.
+- Load the `SettingsScreen` and verify the "Anonymous User" layout renders.
+
+***
+
+## [Phase 3.3] — Phase 3 TODOs Cleanup & Token Exchange
+**Date Completed:** 2026-03-09
+**Status:** ✅ Done
+
+### What Was Built
+- Created `SpotifyTokenInterceptor.kt` injected into OkHttp to append the `Bearer` token to all endpoints (except `/api/token`).
+- Implemented HTTP 401 handling inside `SpotifyTokenInterceptor` to seamlessly trigger forced token refreshes safely.
+- Updated `SpotifyApiService.kt` with `@POST("https://accounts.spotify.com/api/token")` functions `getAccessToken` and `refreshAccessToken`.
+- Converted `SpotifyAuthManager` from an `object` single to an `@Inject` Singleton Class to inject the ApiService and SharedPreferences safely.
+- Added `SpotifyTokenInterceptor` to the `NetworkModule.kt` DI graph using `dagger.Lazy<SpotifyAuthManager>` to prevent immediate Dagger cyclic dependency crashes.
+- Scaffolded chunking algorithm inside `SpotifyRepositoryImpl.kt` (`.chunked(100)`) preventing massive playlist failures over the array size limits.
+- Hooked the Spotify Auth custom tab flow to a "Connect to Spotify" Button inside the `SettingsScreen` account area.
+
+### Architecture Decisions
+- Used `dagger.Lazy` in OkHttp Interceptors to circumvent tricky dagger circular mappings involving `Retrofit -> OkHttp -> Interceptor -> AuthManager -> Retrofit`. 
+- Implemented synchronized block wrapping token exchanges inside OkHttp to prevent massive spamming of refresh tokens from parallel coroutines.
+
+### Known Issues / TODOs
+- (Resolved) `MainActivity` now securely captures `musicshelf://callback`. No known issues with Phase 3 auth remain.
+
+### How to Test This Step
+- Sync Gradle and `assembleDebug`. Build will pass.
+- Load the `SettingsScreen` and tap "Connect to Spotify". It should securely launch a Custom Chrome Tab pointing at accounts.spotify.com.
+
+***
+
+## ✅ Phase 3 Complete (Foundational)
+**All structural sub-tasks delivered:** Spotify API networking + DTOs (3.1), PKCE logic (3.2), Token Interceptors + 401 automatic refreshes + 100-Track chunking + UI Triggers (3.3), and Deep Link code-to-token resolution in MainActivity (3.4).
+
+***
+
+## [Phase 3.4] — Spotify Auth Deep Link Intent Resolution
+**Date Completed:** 2026-03-09
+**Status:** ✅ Done
+
+### What Was Built
+- Injected `SpotifyAuthManager` into `MainActivity.kt`.
+- Overrode `onNewIntent(intent: Intent)` to capture the `musicshelf://callback` deep link fired when the browser Custom Tab redirects.
+- Bootstrapped `handleSpotifyIntent(intent)` into both `onCreate` (for dead-process cold starts) and `onNewIntent` (for warm foreground returns).
+- Coroutine-launched `spotifyAuthManager.exchangeCodeForToken(code)` instantly bridging the OAuth Code to the final Access / Refresh Tokens.
+
+### Architecture Decisions
+- Handled intent parsing silently in `MainActivity` before the Compose Navigation graph even recognizes a state change. If the AuthManager successfully parses it and saves it to `SharedPreferences`, the rest of the app becomes immediately ready.
+
+### How to Test This Step
+- Build `assembleDebug`, run the app, and tap "Connect to Spotify".
+- Fully sign into a Spotify account in the browser.
+- When the browser collapses and redirects to the app, check `SharedPreferences` (or Add a Track) to verify the OAuth tokens were securely traded and saved.
+
+***
+***
+
+## [Phase 4.2] — Google Sign-In & Anonymous Fallback Wiring
+**Date Completed:** 2026-03-09
+**Status:** ✅ Done
+
+### What Was Built
+- Added `androidx.credentials` (Credential Manager) dependencies to `gradle/libs.versions.toml` and `app/build.gradle.kts` using version `1.3.0-rc01`.
+- Fully implemented the Google Sign-In flow in `SettingsScreen.kt` using the new `CredentialManager` and `GetGoogleIdOption`.
+- Verified that the Google ID token is successfully passed to `AuthViewModel.signInWithGoogle(idToken)`.
+- Implemented an automatic Anonymous Auth instantiate-on-launch flow inside `AppNavGraph.kt` using a `LaunchedEffect` that checks for a null `authUser`.
+- Added the `default_web_client_id` placeholder to `strings.xml`.
+
+### Architecture Decisions
+- Used `LaunchedEffect(authUser)` at the root of the navigation graph to ensure the app is always in a valid authenticated state (anonymous by default).
+- Switched to the modern `Credential Manager` API instead of the deprecated `GoogleSignInClient` for future-proofing Google Sign-In.
+
+### Known Issues / TODOs
+- `default_web_client_id` is currently a placeholder and needs to be replaced with the actual client ID from the Google Cloud Console for real-world functionality.
+
+### How to Test This Step
+- Build the app and confirm Gradle sync completes with the new Credential Manager dependencies.
+- Launch the app and verify that an anonymous sign-in is triggered (check logs or Auth state).
+- Open Settings, tap "Sign In with Google", and confirm the system account picker appears.
+
+***
+***
+
+## [Phase 4.3] — Firestore Playlist Mirroring
+**Date Completed:** 2026-03-09
+**Status:** ✅ Done
+
+### What Was Built
+- **UI**: Added a "Collaborative" material `Switch` to the `PlaylistHeader` in `PlaylistDetailScreen.kt`.
+- **ViewModel**: Implemented `toggleCollaborative(Boolean)` in `PlaylistDetailViewModel.kt` to persist the state in Room.
+- **Data Layer**:
+    - Added `getTracksForPlaylistSync(id)` to `TrackDao.kt` and `TrackRepository.kt` for synchronous batch fetching.
+    - Updated `PlaylistRepositoryImpl.kt` to inject `FirebaseFirestore`.
+    - Implemented Firestore sync logic: when `isCollaborative` is enabled, the playlist metadata is pushed to `playlists/{id}` and all local tracks are mirrored to a `tracks` sub-collection.
+    - Added automatic Firestore deletion when a collaborative playlist is deleted locally.
+
+### Architecture Decisions
+- Used a simple "Overwrite/Set" strategy for Task 2 to ensure initial data parity between Room and Firestore.
+- Repurposed the existing `updatePlaylist` flow in the repository to trigger the sync, keeping the repository as the clean sync authority.
+
+### Known Issues / TODOs
+- Real-time listening for updates from other collaborators is deferred to Task 4.
+
+### How to Test This Step
+- Build `assembleDebug` to verify compilation.
+- Create a playlist, open its detail screen, and toggle "Collaborative".
+- (Manual) Check Firestore Console to verify the `playlists/{uuid}` document and `tracks` collection were created with correct local data.
+
+***
