@@ -35,6 +35,7 @@ class SpotifyAuthManager @Inject constructor(
     fun initiateAuthFlow(context: Context) {
         val codeVerifier = generateCodeVerifier()
         currentCodeVerifier = codeVerifier
+        sharedPreferences.edit().putString("spotify_code_verifier", codeVerifier).apply()
         val codeChallenge = generateCodeChallenge(codeVerifier)
 
         val uri = Uri.parse(AUTH_URL).buildUpon()
@@ -73,9 +74,11 @@ class SpotifyAuthManager @Inject constructor(
         return null
     }
 
-    suspend fun exchangeCodeForToken(code: String) {
-        val verifier = currentCodeVerifier ?: return
-        try {
+    suspend fun exchangeCodeForToken(code: String): Result<Unit> {
+        val verifier = currentCodeVerifier ?: sharedPreferences.getString("spotify_code_verifier", null) 
+            ?: return Result.failure(Exception("Code verifier not found"))
+            
+        return try {
             val response = spotifyApiService.getAccessToken(
                 clientId = CLIENT_ID,
                 code = code,
@@ -83,8 +86,19 @@ class SpotifyAuthManager @Inject constructor(
                 codeVerifier = verifier
             )
             saveTokens(response.accessToken, response.refreshToken)
+            Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
+            val msg = if (e is retrofit2.HttpException) {
+                try {
+                    e.response()?.errorBody()?.string() ?: e.message()
+                } catch (ignored: Exception) {
+                    e.message()
+                }
+            } else {
+                e.message ?: "Unknown error"
+            }
+            Result.failure(Exception(msg))
         }
     }
 

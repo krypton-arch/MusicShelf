@@ -70,8 +70,23 @@ class MainActivity : ComponentActivity() {
         val code = spotifyAuthManager.handleAuthCallback(intent)
         if (code != null) {
             lifecycleScope.launch {
-                spotifyAuthManager.exchangeCodeForToken(code)
+                val result = spotifyAuthManager.exchangeCodeForToken(code)
+                if (result.isFailure) {
+                    android.widget.Toast.makeText(
+                        this@MainActivity,
+                        "Spotify Auth Failed: ${result.exceptionOrNull()?.message}",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    android.widget.Toast.makeText(this@MainActivity, "Spotify Connected!", android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
+        } else if (intent?.data?.scheme == "musicshelf" && intent.data?.getQueryParameter("error") != null) {
+            android.widget.Toast.makeText(
+                this, 
+                "Spotify Auth Error: ${intent.data?.getQueryParameter("error")}", 
+                android.widget.Toast.LENGTH_LONG
+            ).show()
         }
     }
 }
