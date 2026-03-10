@@ -511,6 +511,28 @@ All Phase 2 tasks (2.1–2.7) documented above.
 - When the browser collapses and redirects to the app, check `SharedPreferences` (or Add a Track) to verify the OAuth tokens were securely traded and saved.
 
 ***
+
+## [Phase 3.5] — Comprehensive Spotify Import Fixes
+**Date Completed:** 2026-03-10
+**Status:** ✅ Done
+
+### What Was Built
+- **Pagination**: Implemented a `while (response.next != null)` loop in `SpotifyRepositoryImpl.kt` hitting a new `@Url` endpoint `getPlaylistTracksUrl` to recursively fetch every single page of tracks for playlists exceeding 100 items limit.
+- **OAuth Scopes**: Appended the critical `user-library-read` scope to `SpotifyAuthManager`'s PKCE `/authorize` builder intent, ensuring private library saves are fully visible.
+- **DTO Structure**: Surfaced `items[n].track` explicitly ensuring `SpotifyTrackDto` captures the deeply nested properties cleanly.
+- **Null Safety**: Filtered out empty tracks (like unavailable audio or local files synced cross-device to Spotify) safely using `mapIndexedNotNull`. Also provided default strings (`Unknown Artist`) for missing deep metadata array fields avoiding silent `NullPointerException` app crashes.
+- **Error Bubbling**: Mapped `.onFailure` states inside `SpotifyImportViewModel` directly to `_uiState.error` avoiding silenced coroutines.
+
+### Architecture Decisions
+- Appends the track collections in a synchronous loop blocking the coroutine suspended until all pagination cursors are exhausted — simple, bulletproof, and executes on the `IO` dispatcher gracefully under `viewModelScope`.
+- Made fields deep down into `SpotifyArtistDto` and `SpotifyAlbumDto` natively nullable to gracefully accept corrupted Spotify API responses.
+
+### How to Test This Step
+- Re-authenticate to accept the new OAuth scope.
+- Import a playlist with over 100 songs or containing synced local MP3s.
+- Confirm all tracks enumerate safely in the application without dropping items.
+
+***
 ***
 
 ## [Phase 4.2] — Google Sign-In & Anonymous Fallback Wiring

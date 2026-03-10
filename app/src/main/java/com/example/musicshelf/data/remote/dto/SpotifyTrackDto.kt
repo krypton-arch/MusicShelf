@@ -3,7 +3,8 @@ package com.example.musicshelf.data.remote.dto
 import com.google.gson.annotations.SerializedName
 
 data class SpotifyPlaylistTracksResponse(
-    @SerializedName("items") val items: List<SpotifyTrackItemDto>
+    @SerializedName("items") val items: List<SpotifyTrackItemDto>,
+    @SerializedName("next") val next: String?
 )
 
 data class SpotifyTrackItemDto(

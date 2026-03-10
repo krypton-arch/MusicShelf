@@ -44,7 +44,7 @@ class SpotifyAuthManager @Inject constructor(
             .appendQueryParameter("redirect_uri", REDIRECT_URI)
             .appendQueryParameter("code_challenge_method", "S256")
             .appendQueryParameter("code_challenge", codeChallenge)
-            .appendQueryParameter("scope", "playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public")
+            .appendQueryParameter("scope", "playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public user-library-read")
             .build()
 
         val customTabsIntent = CustomTabsIntent.Builder().build()

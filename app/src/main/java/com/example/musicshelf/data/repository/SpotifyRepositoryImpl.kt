@@ -40,13 +40,21 @@ class SpotifyRepositoryImpl @Inject constructor(
         localPlaylistId: String
     ): Result<List<TrackEntity>> {
         return try {
-            val response = apiService.getPlaylistTracks(spotifyPlaylistId)
-            val entities = response.items.mapIndexedNotNull { index, itemDto ->
+            val allItems = mutableListOf<com.example.musicshelf.data.remote.dto.SpotifyTrackItemDto>()
+            var currentResponse = apiService.getPlaylistTracks(spotifyPlaylistId)
+            allItems.addAll(currentResponse.items)
+            
+            while (currentResponse.next != null) {
+                currentResponse = apiService.getPlaylistTracksUrl(currentResponse.next!!)
+                allItems.addAll(currentResponse.items)
+            }
+            
+            val entities = allItems.mapIndexedNotNull { index, itemDto ->
                 val track = itemDto.track ?: return@mapIndexedNotNull null
                 
                 // Provide sensible defaults for missing data
                 val trackName = track.name ?: "Unknown Track"
-                val artistName = track.artists?.joinToString(", ") { it.name } ?: "Unknown Artist"
+                val artistName = track.artists?.joinToString(", ") { it.name ?: "" } ?: "Unknown Artist"
                 val albumName = track.album?.name ?: "Unknown Album"
                 
                 TrackEntity(

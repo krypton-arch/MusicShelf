@@ -31,6 +31,11 @@ interface SpotifyApiService {
         @Query("offset") offset: Int = 0
     ): SpotifyPlaylistTracksResponse
 
+    @GET
+    suspend fun getPlaylistTracksUrl(
+        @retrofit2.http.Url url: String
+    ): SpotifyPlaylistTracksResponse
+
     @POST("v1/users/{user_id}/playlists")
     suspend fun createPlaylist(
         @Path("user_id") userId: String,
