@@ -11,6 +11,7 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.asStateFlow
 
 @Singleton
 class SpotifyAuthManager @Inject constructor(
@@ -29,7 +30,7 @@ class SpotifyAuthManager @Inject constructor(
     private val _isConnected = kotlinx.coroutines.flow.MutableStateFlow(
         sharedPreferences.getString("spotify_access_token", null) != null
     )
-    val isConnected: kotlinx.coroutines.flow.StateFlow<Boolean> = kotlinx.coroutines.flow.asStateFlow(_isConnected)
+    val isConnected: kotlinx.coroutines.flow.StateFlow<Boolean> = _isConnected.asStateFlow()
 
     fun initiateAuthFlow(context: Context) {
         val codeVerifier = generateCodeVerifier()
