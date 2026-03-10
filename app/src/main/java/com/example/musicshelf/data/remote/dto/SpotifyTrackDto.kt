@@ -7,16 +7,16 @@ data class SpotifyPlaylistTracksResponse(
 )
 
 data class SpotifyTrackItemDto(
-    @SerializedName("track") val track: SpotifyTrackDto
+    @SerializedName("track") val track: SpotifyTrackDto?
 )
 
 data class SpotifyTrackDto(
-    @SerializedName("id") val id: String,
-    @SerializedName("name") val name: String,
-    @SerializedName("artists") val artists: List<SpotifyArtistDto>,
-    @SerializedName("album") val album: SpotifyAlbumDto,
-    @SerializedName("duration_ms") val durationMs: Long,
-    @SerializedName("uri") val uri: String
+    @SerializedName("id") val id: String?,
+    @SerializedName("name") val name: String?,
+    @SerializedName("artists") val artists: List<SpotifyArtistDto>?,
+    @SerializedName("album") val album: SpotifyAlbumDto?,
+    @SerializedName("duration_ms") val durationMs: Long?,
+    @SerializedName("uri") val uri: String?
 )
 
 data class SpotifyArtistDto(

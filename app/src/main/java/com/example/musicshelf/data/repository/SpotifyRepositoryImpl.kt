@@ -41,16 +41,22 @@ class SpotifyRepositoryImpl @Inject constructor(
     ): Result<List<TrackEntity>> {
         return try {
             val response = apiService.getPlaylistTracks(spotifyPlaylistId)
-            val entities = response.items.mapIndexed { index, itemDto ->
-                val track = itemDto.track
+            val entities = response.items.mapIndexedNotNull { index, itemDto ->
+                val track = itemDto.track ?: return@mapIndexedNotNull null
+                
+                // Provide sensible defaults for missing data
+                val trackName = track.name ?: "Unknown Track"
+                val artistName = track.artists?.joinToString(", ") { it.name } ?: "Unknown Artist"
+                val albumName = track.album?.name ?: "Unknown Album"
+                
                 TrackEntity(
                     id = UUID.randomUUID().toString(),
                     playlistId = localPlaylistId,
-                    title = track.name,
-                    artist = track.artists.joinToString(", ") { it.name },
-                    album = track.album.name,
-                    durationMs = track.durationMs,
-                    coverUri = track.album.images?.firstOrNull()?.url,
+                    title = trackName,
+                    artist = artistName,
+                    album = albumName,
+                    durationMs = track.durationMs ?: 0L,
+                    coverUri = track.album?.images?.firstOrNull()?.url,
                     spotifyUri = track.uri,
                     position = index,
                     addedAt = System.currentTimeMillis()
