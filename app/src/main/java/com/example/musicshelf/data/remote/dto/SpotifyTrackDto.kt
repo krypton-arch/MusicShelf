@@ -20,10 +20,10 @@ data class SpotifyTrackDto(
 )
 
 data class SpotifyArtistDto(
-    @SerializedName("name") val name: String
+    @SerializedName("name") val name: String?
 )
 
 data class SpotifyAlbumDto(
-    @SerializedName("name") val name: String,
+    @SerializedName("name") val name: String?,
     @SerializedName("images") val images: List<SpotifyImageDto>?
 )

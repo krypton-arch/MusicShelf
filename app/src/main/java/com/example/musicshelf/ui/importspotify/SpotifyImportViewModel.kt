@@ -79,8 +79,6 @@ class SpotifyImportViewModel @Inject constructor(
             
             selectedPlaylists.forEach { playlist ->
                 // 1. Create local playlist
-                // We generate a new local ID unless we want to keep the Spotify ID as primary (spec says UUID)
-                // SpotifyRepositoryImpl already generates a random UUID for 'id' and puts the real spotifyId in 'spotifyId'
                 playlistRepository.createPlaylist(playlist)
                 
                 // 2. Fetch and save tracks
@@ -90,10 +88,19 @@ class SpotifyImportViewModel @Inject constructor(
                             trackRepository.addTracks(tracks)
                             successCount++
                         }
+                        .onFailure { error ->
+                            _uiState.update { it.copy(error = "Failed to fetch tracks: ${error.message}") }
+                        }
                 }
             }
             
-            _uiState.update { it.copy(isLoading = false, importSuccess = successCount) }
+            _uiState.update { state -> 
+                if (state.error == null) {
+                    state.copy(isLoading = false, importSuccess = successCount) 
+                } else {
+                    state.copy(isLoading = false)
+                }
+            }
         }
     }
 
