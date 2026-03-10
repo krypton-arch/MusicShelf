@@ -32,6 +32,18 @@ class SpotifyAuthManager @Inject constructor(
     )
     val isConnected: kotlinx.coroutines.flow.StateFlow<Boolean> = _isConnected.asStateFlow()
 
+    init {
+        // Force clear legacy tokens on app upgrade to ensure the new scopes are granted
+        if (!sharedPreferences.getBoolean("spotify_scopes_fixed_v1", false)) {
+            sharedPreferences.edit()
+                .remove("spotify_access_token")
+                .remove("spotify_refresh_token")
+                .putBoolean("spotify_scopes_fixed_v1", true)
+                .apply()
+            _isConnected.value = false
+        }
+    }
+
     fun initiateAuthFlow(context: Context) {
         val codeVerifier = generateCodeVerifier()
         currentCodeVerifier = codeVerifier
@@ -44,7 +56,7 @@ class SpotifyAuthManager @Inject constructor(
             .appendQueryParameter("redirect_uri", REDIRECT_URI)
             .appendQueryParameter("code_challenge_method", "S256")
             .appendQueryParameter("code_challenge", codeChallenge)
-            .appendQueryParameter("scope", "playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public user-library-read")
+            .appendQueryParameter("scope", "playlist-read-private playlist-read-collaborative user-library-read user-read-private user-read-email")
             .build()
 
         val customTabsIntent = CustomTabsIntent.Builder().build()

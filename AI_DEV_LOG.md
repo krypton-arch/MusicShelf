@@ -533,6 +533,24 @@ All Phase 2 tasks (2.1–2.7) documented above.
 - Confirm all tracks enumerate safely in the application without dropping items.
 
 ***
+
+## [Phase 3.6] — Spotify 403 Scope & Re-Authentication Fix
+**Date Completed:** 2026-03-10
+**Status:** ✅ Done
+
+### What Was Built
+- **Precise OAuth Scopes**: Replaced the Spotify PKCE Authorize query scope completely with precisely `"playlist-read-private playlist-read-collaborative user-library-read user-read-private user-read-email"`.
+- **Automated Token Clearing**: Injected a versioned flag `spotify_scopes_fixed_v1` into `SharedPreferences` inside the `SpotifyAuthManager`'s `init` block. When the app boots on this new version, it forcefully deletes the stale `spotify_access_token` and `spotify_refresh_token` payloads and writes the flag, guaranteeing a seamless downgrade of `isConnected` and forcing the user to undergo a fresh OAuth request for the new scopes.
+
+### Architecture Decisions
+- Handled the token wiping natively inside the `AuthManager`'s singleton initialization instead of making a one-off database script.
+
+### How to Test This Step
+- Launch the application over an already logged-in previous version.
+- Observe that the Spotify connection states revert safely to "Not Connected" automatically without manual clears.
+- Re-authorize and complete a playlist track import without hitting 403 HTTP errors.
+
+***
 ***
 
 ## [Phase 4.2] — Google Sign-In & Anonymous Fallback Wiring
